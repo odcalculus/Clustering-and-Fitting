@@ -55,12 +55,12 @@ def scale_data(df):
     data = pd.DataFrame(scaled_features,columns=headers)
     return data
 
-def model(x, a, b, c, d):
+def model(x, a, b, c):
     """
     This is a function that takes in 5 arguments and returns a given function aX^3 + bX^2 + cX + d
     """
     x = x - 2000
-    return a*x**3 + b*x**2 + c*x + d
+    return a + b*x + c*x**2 
 
 #Reading of the file using a predefined function
 file = 'API_19_DS2_en_csv_v2_4773766.csv'
@@ -144,7 +144,7 @@ df,df_T = data_read(file,indicator,cols)
 df_T.columns = df_T.iloc[0]
 df_T.drop('Country Name',inplace=True)
 df_T['Year'] = df_T.index
-df_fit = df_T[['Year','Nigeria']].dropna().apply(pd.to_numeric).values
+df_fit = df_T[['Year','Spain']].dropna().apply(pd.to_numeric).values
 
 #We now assign our x and y data to an array
 x_axis = df_fit[:,0]
@@ -154,7 +154,7 @@ y_axis = df_fit[:,1]
 plt.figure(dpi=1000)
 plt.title('Scatterplot of the initial x and y axis for fitting')
 plt.xlabel('Year')
-plt.ylabel('CO2 emissions (kg per PPP $ of GDP) for Nigeria')
+plt.ylabel('CO2 emissions (kg per PPP $ of GDP) for Spain')
 plt.scatter(x_axis,y_axis)
 plt.show()
 
@@ -162,18 +162,26 @@ plt.show()
 popt, pcov = opt.curve_fit(model, x_axis, y_axis)
 
 #We assign the output of the curve fit to variables and try to use err_ranges to get the lower and upper boundaries
-a_opt, b_opt, c_opt, d_opt = popt
+a_opt, b_opt, c_opt = popt
+year1 = 1990
+year2 = 2030
+x_line = np.arange(year1,year2+1,1)
+y_line = model(x_line, a_opt, b_opt, c_opt)
 sigma = np.sqrt(np.diag(pcov))
-low, up = err.err_ranges(x_axis, model, popt, sigma)
-x_line = np.arange(min(x_axis),max(x_axis)+1,1)
-y_line = model(x_line, a_opt, b_opt, c_opt, d_opt)
+low, up = err.err_ranges(x_line, model, popt, sigma)
+
 
 #Then we make a plot containing the scatterplot, curve fit line, and the curve boundaries
 plt.figure(dpi=1000)
 plt.scatter(x_axis, y_axis)
 plt.plot(x_line, y_line,c='black')
-plt.fill_between(x_axis, low, up, alpha=0.5, color='blue')
-plt.title('Plot of the x and y axis fitted')
+plt.fill_between(x_line, low, up, alpha=0.2, color='blue')
+plt.title('Plot of the x and y axis fitted with future predictions')
 plt.xlabel('Year')
-plt.ylabel('CO2 emissions (kg per PPP $ of GDP) for Nigeria')
+plt.ylabel('CO2 emissions (kg per PPP $ of GDP) for Spain')
 plt.show()
+
+#We we create a dataframe that will show the predicted values for future years
+future_predictions = pd.DataFrame({'Year':x_line,'Predicted':y_line})
+future_predictions = future_predictions.iloc[30:]
+print(future_predictions)

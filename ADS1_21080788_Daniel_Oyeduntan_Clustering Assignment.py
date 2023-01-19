@@ -8,9 +8,12 @@ Created on Thu Jan 5 14:23:49 2023
 #Importing the necessary libraries
 import pandas as pd
 import matplotlib.pyplot as plt
-
+import numpy as np
 from sklearn.cluster import KMeans
 from sklearn.preprocessing import MinMaxScaler
+
+import scipy.optimize as opt
+import err_ranges as err
 
 #Definition of functions to be used
 def data_read(filename,indicators,cols):
@@ -51,6 +54,13 @@ def scale_data(df):
     scaled_features = scalar.transform(df)
     data = pd.DataFrame(scaled_features,columns=headers)
     return data
+
+def model(x, a, b, c, d):
+    """
+    This is a function that takes in 5 arguments and returns a given function aX^3 + bX^2 + cX + d
+    """
+    x = x - 2000
+    return a*x**3 + b*x**2 + c*x + d
 
 #Reading of the file using a predefined function
 file = 'API_19_DS2_en_csv_v2_4773766.csv'
@@ -114,4 +124,56 @@ for i in range(len(df_list)):
 plt.xlabel('1980')
 plt.ylabel('2021')
 plt.legend
+plt.show()
+
+
+#Now the fitting part of the assignment, we read our file using a defined function
+file = 'API_19_DS2_en_csv_v2_4773766.csv'
+indicator = 'CO2 emissions (kg per PPP $ of GDP)'
+cols = ['Country Name','1960', 
+'1961', '1962', '1963', '1964', '1965', '1966', '1967', '1968', '1969', '1970', 
+'1971', '1972', '1973', '1974', '1975', '1976', '1977', '1978', '1979', '1980', 
+'1981', '1982', '1983', '1984', '1985', '1986', '1987', '1988', '1989', '1990', 
+'1991', '1992', '1993', '1994', '1995', '1996', '1997', '1998', '1999', '2000', 
+'2001', '2002', '2003', '2004', '2005', '2006', '2007', '2008', '2009', '2010', 
+'2011', '2012', '2013', '2014', '2015', '2016', '2017', '2018', '2019', '2020', 
+'2021']
+df,df_T = data_read(file,indicator,cols)
+
+#And then we do more preprocessing
+df_T.columns = df_T.iloc[0]
+df_T.drop('Country Name',inplace=True)
+df_T['Year'] = df_T.index
+df_fit = df_T[['Year','Nigeria']].dropna().apply(pd.to_numeric).values
+
+#We now assign our x and y data to an array
+x_axis = df_fit[:,0]
+y_axis = df_fit[:,1]
+
+#We then plot a scatterplot of the initial x and y axis
+plt.figure(dpi=1000)
+plt.title('Scatterplot of the initial x and y axis for fitting')
+plt.xlabel('Year')
+plt.ylabel('CO2 emissions (kg per PPP $ of GDP) for Nigeria')
+plt.scatter(x_axis,y_axis)
+plt.show()
+
+#We then fit our curvefit model using the model function and our new x and y axis
+popt, pcov = opt.curve_fit(model, x_axis, y_axis)
+
+#We assign the output of the curve fit to variables and try to use err_ranges to get the lower and upper boundaries
+a_opt, b_opt, c_opt, d_opt = popt
+sigma = np.sqrt(np.diag(pcov))
+low, up = err.err_ranges(x_axis, model, popt, sigma)
+x_line = np.arange(min(x_axis),max(x_axis)+1,1)
+y_line = model(x_line, a_opt, b_opt, c_opt, d_opt)
+
+#Then we make a plot containing the scatterplot, curve fit line, and the curve boundaries
+plt.figure(dpi=1000)
+plt.scatter(x_axis, y_axis)
+plt.plot(x_line, y_line,c='black')
+plt.fill_between(x_axis, low, up, alpha=0.5, color='blue')
+plt.title('Plot of the x and y axis fitted')
+plt.xlabel('Year')
+plt.ylabel('CO2 emissions (kg per PPP $ of GDP) for Nigeria')
 plt.show()

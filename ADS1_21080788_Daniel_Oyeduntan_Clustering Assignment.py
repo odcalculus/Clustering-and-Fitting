@@ -11,7 +11,6 @@ import matplotlib.pyplot as plt
 import numpy as np
 from sklearn.cluster import KMeans
 from sklearn.preprocessing import MinMaxScaler
-
 import scipy.optimize as opt
 import err_ranges as err
 
@@ -86,7 +85,7 @@ plt.show()
 df_std = df[['1980', '2021']]
 df_std = scale_data(df_std)
 
-#To help determine the number of clusters to use
+#To help determine the number of clusters to use using the elbow method
 sse = []
 k_range = range(1,11)
 for k in k_range:
@@ -115,16 +114,17 @@ df4 = df[df['Clusters']==4]
 
 df_list = [df0, df1, df2, df3, df4]
 df_color = ['green','red','blue','yellow','purple']
-
+labels = ['Cluster 1', 'Cluster 2', 'Cluster 3', 'Cluster 4', 'Cluster 5']
 plt.figure(dpi=1000)
 plt.title('Scatter plot showing all different clusters and position of centroid',fontsize=9)
 for i in range(len(df_list)):
-    plt.scatter(df_list[i]['1980'],df_list[i]['2021'],c=df_color[i])
+    plt.scatter(df_list[i]['1980'],df_list[i]['2021'],c=df_color[i],label=labels[i])
 #plt.scatter(km.cluster_centers_[:,0],km.cluster_centers_[:,1],c='black',marker='*',label='centroid')
 plt.xlabel('1980')
 plt.ylabel('2021')
-plt.legend
+plt.legend()
 plt.show()
+
 
 
 #Now the fitting part of the assignment, we read our file using a defined function
@@ -169,7 +169,6 @@ x_line = np.arange(year1,year2+1,1)
 y_line = model(x_line, a_opt, b_opt, c_opt)
 sigma = np.sqrt(np.diag(pcov))
 low, up = err.err_ranges(x_line, model, popt, sigma)
-
 
 #Then we make a plot containing the scatterplot, curve fit line, and the curve boundaries
 plt.figure(dpi=1000)
